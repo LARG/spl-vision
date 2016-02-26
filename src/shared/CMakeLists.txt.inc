@@ -12,8 +12,6 @@ include_directories(${shared_dir}/vartypes/enhanced)
 include_directories(${shared_dir}/vartypes/gui)
 include_directories(${shared_dir}/vartypes/xml)
 
-include_directories("/usr/include/eigen2")
-
 set (SHARED_SRCS
 	${shared_dir}/capture/capturedc1394v2.cpp
   ${shared_dir}/capture/capture_v4l2.cpp
@@ -110,6 +108,7 @@ set (SHARED_HEADERS
 	${shared_dir}/cmpattern/cmpattern_teamdetector.h
 
 	${shared_dir}/util/field.h
+	${shared_dir}/util/lut3d.h
 
 	${shared_dir}/vartypes/VarNotifier.h
 

@@ -20,39 +20,59 @@
 //========================================================================
 
 #include "capture_ros_topic.h"
+    
+#ifdef VDATA_NO_QT
+CaptureRosTopic::CaptureRosTopic(VarList * _settings) : CaptureInterface(_settings) { 
+#else
+CaptureRosTopic::CaptureRosTopic(VarList * _settings, QObject * parent) : QObject(parent), CaptureInterface(_settings) {
+#endif
+  is_capturing = false;
+  settings->addChild(v_base_topic = new VarString("BaseTopic", "/center_camera"));
+}
 
 RawImage CaptureRosTopic::getFrame() {
-  return RawImage();
+#ifndef VDATA_NO_QT
+  QMutexLocker lock(&mutex);
+#endif
+  //TODO: Return the last-constructed RawImage if there hasn't been an update from the topic
+  RawImage image;
+  if(last_image != NULL) {
+    image.setWidth(last_image->width);
+    image.setHeight(last_image->height);
+    image.setColorFormat(COLOR_RGB8);
+    unsigned char* data = new unsigned char[
+      image.computeImageSize(COLOR_RGB8, last_image->width * last_image->height)
+    ];
+    image.setData(data);
+  }
+  return image;
 }
 
 bool CaptureRosTopic::isCapturing() {
-  return false;
+  return is_capturing;
 }
 
 void CaptureRosTopic::releaseFrame() {
-  return;
+  last_image.reset();
 }
 
 bool CaptureRosTopic::startCapture() {
-  return false;
+  image_topic = v_base_topic->getString() + "/image_raw/decompressed";
+  subscriber = node.subscribe(image_topic, 1, &CaptureRosTopic::receiveImage, this);
+  return true;
+}
+
+void CaptureRosTopic::receiveImage(sensor_msgs::ImageConstPtr image) {
+  last_image = image;
 }
 
 bool CaptureRosTopic::stopCapture() {
-  return false;
-}
-
-bool CaptureRosTopic::resetBus() {
-  return false;
-}
-
-void CaptureRosTopic::readAllParameterValues() {
-  return;
-}
-
-bool CaptureRosTopic::copyAndConvertFrame(const RawImage & src, RawImage & target) {
-  return false;
+  subscriber.shutdown();
+  last_image.reset();
+  is_capturing = false;
+  return true;
 }
 
 string CaptureRosTopic::getCaptureMethodName() const {
-  return string();
+  return "ROS Topic";
 }

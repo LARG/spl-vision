@@ -137,20 +137,26 @@ set (CMAKE_CXX_FLAGS_RELEASE "-DNDEBUG -O3 -march=native -Wl,--no-as-needed")
 message( STATUS "CC Flags: ${CMAKE_CXX_FLAGS_RELEASE}")
 message (STATUS "Custom CC Flags: ${cc_flags}")
 
+set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-result")
+
 add_definitions(${cc_flags})
 
+#setup ros subscriptions
+find_package(catkin REQUIRED COMPONENTS roscpp rospy sensor_msgs)
+
 ## build the common code
+find_library(lib_dc1394 dc1394)
+set (libs ${QT_LIBRARIES} ${lib_dc1394} ${catkin_LIBRARIES} jpeg png protobuf pthread GL GLU)
+
 add_library(sslvision ${SHARED_MOC_SRCS} ${SHARED_RC_SRCS} ${CC_PROTO} ${SHARED_SRCS})
 add_dependencies(sslvision GenerateProto)
-target_link_libraries(sslvision ${QT_LIBRARIES})
-
-find_library(lib_dc1394 dc1394)
-set (libs ${QT_LIBRARIES} ${lib_dc1394} jpeg png protobuf pthread GL GLU sslvision)
+target_link_libraries(sslvision ${libs})
+set(libs ${libs} sslvision)
 
 ## build the main app
 set (target vision)
 add_executable(${target} ${UI_SRCS} ${MOC_SRCS} ${RC_SRCS} ${SRCS})
-target_link_libraries(${target} ${libs} ${lib_dc1394})
+target_link_libraries(${target} ${libs})
 
 ##build non graphical client
 set (client client)
@@ -176,5 +182,3 @@ add_executable(${gclient} ${GCLIENT_MOC_SRCS}
   src/graphicalClient/gltext.cpp
 )
 target_link_libraries(${gclient} ${libs})
-
-

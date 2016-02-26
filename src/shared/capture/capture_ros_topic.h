@@ -22,8 +22,11 @@
 #ifndef CAPTUREROSTOPIC_H
 #define CAPTUREROSTOPIC_H
 
-#include "captureinterface.h"
 #include <string>
+#include <ros/ros.h>
+#include <sensor_msgs/Image.h>
+#include "captureinterface.h"
+#include "VarTypes.h"
 #ifndef VDATA_NO_QT
   #include <QMutex>
   #include <QMutexLocker>
@@ -43,9 +46,9 @@ class CaptureRosTopic : public QObject, public CaptureInterface {
 
   public:
 #ifdef VDATA_NO_QT
-    CaptureRosTopic(VarList * _settings) : CaptureInterface(_settings) { }
+    CaptureRosTopic(VarList * _settings);
 #else
-    CaptureRosTopic(VarList * _settings, QObject * parent=NULL) : QObject(parent), CaptureInterface(_settings) { }
+    CaptureRosTopic(VarList * _settings, QObject * parent=NULL);
 #endif
     ~CaptureRosTopic() { }
 
@@ -55,9 +58,16 @@ class CaptureRosTopic : public QObject, public CaptureInterface {
     virtual void     releaseFrame();
     virtual bool     startCapture();
     virtual bool     stopCapture();
-    virtual bool     resetBus();
-    virtual void     readAllParameterValues();
-    virtual bool     copyAndConvertFrame(const RawImage & src, RawImage & target);
     virtual string   getCaptureMethodName() const;
+
+    void receiveImage(sensor_msgs::ImageConstPtr image);
+
+  private:
+    bool is_capturing;
+    VarString * v_base_topic;
+    std::string image_topic;
+    ros::NodeHandle node;
+    ros::Subscriber subscriber;
+    sensor_msgs::ImageConstPtr last_image;
 };
 #endif

@@ -26,9 +26,11 @@
 #include "mainwindow.h"
 #include <stdio.h>
 #include "qgetopt.h"
+#include <ros/ros.h>
 
 int main(int argc, char *argv[])
 {
+  ros::init(argc, argv, "spl-vision");
   QApplication app(argc, argv);
 
   GetOpt opts(argc, argv);
