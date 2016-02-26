@@ -128,16 +128,21 @@ elseif (${arch} MATCHES "x86")
 	set (cc_flags "")
 endif()
 
+set (cxx_warning_flags "${cxx_warning_flags} -Wno-unused-result")
+set (cc_flags "${cc_flags} ${cxx_warning_flags}")
+
 #flags to set in debug mode
 set (CMAKE_CXX_FLAGS_DEBUG "-g -Wl,--no-as-needed")
 
 #flags to set in release mode
 set (CMAKE_CXX_FLAGS_RELEASE "-DNDEBUG -O3 -march=native -Wl,--no-as-needed")
 
-message( STATUS "CC Flags: ${CMAKE_CXX_FLAGS_RELEASE}")
+IF(CMAKE_BUILD_TYPE MATCHES Debug)
+  message( STATUS "CC Flags: ${CMAKE_CXX_FLAGS_DEBUG}")
+ELSEIF(CMAKE_BUILD_TYPE MATCHES Release)
+  message( STATUS "CC Flags: ${CMAKE_CXX_FLAGS_RELEASE}")
+ENDIF()
 message (STATUS "Custom CC Flags: ${cc_flags}")
-
-set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-result")
 
 add_definitions(${cc_flags})
 

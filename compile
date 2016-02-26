@@ -1,0 +1,55 @@
+#!/bin/sh
+
+# A POSIX variable
+OPTIND=1         # Reset in case getopts has been used previously in the shell.
+
+# Initialize our own variables:
+output_file=""
+release=0
+debug=0
+trace=0
+
+build() {
+  build_type=$1
+  echo "Building in $build_type mode"
+  cd "$(dirname "$0")"
+  mkdir -p build/$build_type
+  cd build/$build_type
+  cmake -DCMAKE_BUILD_TYPE=$build_type ../..
+  if [ -n "$NUM_PROCS" ]; then
+    make -j$NUM_PROCS
+  else
+    make -j8
+  fi
+}
+
+while getopts "h?trdf:" opt; do
+    case "$opt" in
+    h|\?)
+        show_help
+        exit 0
+        ;;
+    r)  release=1
+        ;;
+    d)  debug=1
+        ;;
+    t)  trace=1
+        ;;
+    f)  output_file=$OPTARG
+        ;;
+    esac
+done
+
+shift $((OPTIND-1))
+
+[ "$1" = "--" ] && shift
+
+if [ $release = 1 ]
+then
+  build "Release";
+elif [ $debug = 1 ]
+then
+  build "Debug";
+else
+  build "Debug";
+fi

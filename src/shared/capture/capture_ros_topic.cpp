@@ -22,30 +22,23 @@
 #include "capture_ros_topic.h"
     
 #ifdef VDATA_NO_QT
-CaptureRosTopic::CaptureRosTopic(VarList * _settings) : CaptureInterface(_settings) { 
+CaptureRosTopic::CaptureRosTopic(VarList * _settings) : CaptureInterface(_settings), spinner(1) { 
 #else
-CaptureRosTopic::CaptureRosTopic(VarList * _settings, QObject * parent) : QObject(parent), CaptureInterface(_settings) {
+CaptureRosTopic::CaptureRosTopic(VarList * _settings, QObject * parent) : QObject(parent), CaptureInterface(_settings), spinner(1) {
 #endif
   is_capturing = false;
+  image_ready = false;
   settings->addChild(v_base_topic = new VarString("BaseTopic", "/center_camera"));
+  current_image.allocate(COLOR_RGB8, 640, 480);
 }
 
 RawImage CaptureRosTopic::getFrame() {
 #ifndef VDATA_NO_QT
   QMutexLocker lock(&mutex);
 #endif
-  //TODO: Return the last-constructed RawImage if there hasn't been an update from the topic
-  RawImage image;
-  if(last_image != NULL) {
-    image.setWidth(last_image->width);
-    image.setHeight(last_image->height);
-    image.setColorFormat(COLOR_RGB8);
-    unsigned char* data = new unsigned char[
-      image.computeImageSize(COLOR_RGB8, last_image->width * last_image->height)
-    ];
-    image.setData(data);
-  }
-  return image;
+  //TODO: Use condition variables
+  while(!image_ready);
+  return current_image;
 }
 
 bool CaptureRosTopic::isCapturing() {
@@ -53,23 +46,42 @@ bool CaptureRosTopic::isCapturing() {
 }
 
 void CaptureRosTopic::releaseFrame() {
-  last_image.reset();
+  //TODO: Clear unused current_image memory
+  last_image_message.reset();
+  image_ready = false;
 }
 
 bool CaptureRosTopic::startCapture() {
   image_topic = v_base_topic->getString() + "/image_raw/decompressed";
   subscriber = node.subscribe(image_topic, 1, &CaptureRosTopic::receiveImage, this);
+  spinner.start();
+  is_capturing = true;
   return true;
 }
 
 void CaptureRosTopic::receiveImage(sensor_msgs::ImageConstPtr image) {
-  last_image = image;
+  last_image_message = image;
+  
+  // Ensure the right sizing
+  current_image.ensure_allocation(COLOR_RGB8, last_image_message->width, last_image_message->height);
+
+  // Update the timestamp
+  current_image.setTime(last_image_message->header.stamp.toSec());
+
+  // Copy the data
+  //TODO: Clear unused current_image memory
+  int size = current_image.computeImageSize(COLOR_RGB8, last_image_message->width * last_image_message->height);
+  unsigned char* data = new unsigned char[size];
+  memcpy(data, last_image_message->data.data(), size);
+  current_image.setData(data);
+  image_ready = true;
 }
 
 bool CaptureRosTopic::stopCapture() {
-  subscriber.shutdown();
-  last_image.reset();
+  last_image_message.reset();
   is_capturing = false;
+  spinner.stop();
+  subscriber.shutdown();
   return true;
 }
 

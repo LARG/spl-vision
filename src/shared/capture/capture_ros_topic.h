@@ -68,6 +68,9 @@ class CaptureRosTopic : public QObject, public CaptureInterface {
     std::string image_topic;
     ros::NodeHandle node;
     ros::Subscriber subscriber;
-    sensor_msgs::ImageConstPtr last_image;
+    sensor_msgs::ImageConstPtr last_image_message;
+    ros::AsyncSpinner spinner;
+    RawImage current_image;
+    bool image_ready;
 };
 #endif
