@@ -11,11 +11,15 @@ SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 set (QT_USE_QTNETWORK true)
 set (QT_USE_QTOPENGL true)
 
+SET(CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 find_package ( Qt4 REQUIRED )
+find_package ( Eigen3 REQUIRED )
 
 include_directories(${PROJECT_BINARY_DIR})
 
 include ( ${QT_USE_FILE} )
+
+include_directories(SYSTEM ${EIGEN3_INCLUDE_DIR})
 
 include(src/shared/CMakeLists.txt.inc)
 
@@ -138,13 +142,15 @@ add_definitions(${cc_flags})
 ## build the common code
 add_library(sslvision ${SHARED_MOC_SRCS} ${SHARED_RC_SRCS} ${CC_PROTO} ${SHARED_SRCS})
 add_dependencies(sslvision GenerateProto)
+target_link_libraries(sslvision ${QT_LIBRARIES})
 
-set (libs ${QT_LIBRARIES} dc1394 jpeg png protobuf pthread GL GLU sslvision)
+find_library(lib_dc1394 dc1394)
+set (libs ${QT_LIBRARIES} ${lib_dc1394} jpeg png protobuf pthread GL GLU sslvision)
 
 ## build the main app
 set (target vision)
 add_executable(${target} ${UI_SRCS} ${MOC_SRCS} ${RC_SRCS} ${SRCS})
-target_link_libraries(${target} ${libs})
+target_link_libraries(${target} ${libs} ${lib_dc1394})
 
 ##build non graphical client
 set (client client)
