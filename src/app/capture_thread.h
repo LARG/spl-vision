@@ -33,6 +33,7 @@
 #include "affinity_manager.h"
 
 class CaptureV4L2;
+class CaptureRosTopic;
 
 /*!
   \class   CaptureThread
@@ -50,6 +51,7 @@ protected:
   CaptureInterface * capture;
   CaptureInterface * captureDC1394;
   CaptureInterface * captureV4L2;
+  CaptureInterface * captureRosTopic;
   CaptureInterface * captureFiles;
   CaptureInterface * captureGenerator;
   AffinityManager * affinity;
@@ -59,6 +61,7 @@ protected:
   VarList * settings;
   VarList * dc1394;
   VarList * v4l2;
+  VarList * rostopic;
   VarList * generator;
   VarList * fromfile;
   VarList * control;

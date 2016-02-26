@@ -16,7 +16,8 @@ include_directories("/usr/include/eigen2")
 
 set (SHARED_SRCS
 	${shared_dir}/capture/capturedc1394v2.cpp
-    ${shared_dir}/capture/capture_v4l2.cpp
+  ${shared_dir}/capture/capture_v4l2.cpp
+  ${shared_dir}/capture/capture_ros_topic.cpp
 	${shared_dir}/capture/capturefromfile.cpp
   ${shared_dir}/capture/capture_generator.cpp
 	${shared_dir}/capture/captureinterface.cpp
@@ -100,7 +101,8 @@ set (SHARED_SRCS
 #only ones that need to be moc'ed
 set (SHARED_HEADERS
 	${shared_dir}/capture/capturedc1394v2.h
-    ${shared_dir}/capture/capture_v4l2.h
+  ${shared_dir}/capture/capture_v4l2.h
+  ${shared_dir}/capture/capture_ros_topic.h
 	${shared_dir}/capture/capturefromfile.h
   ${shared_dir}/capture/capture_generator.h
 	

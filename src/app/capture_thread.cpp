@@ -21,6 +21,7 @@
 
 #include "capture_thread.h"
 #include "capture_v4l2.h"
+#include "capture_ros_topic.h"
 
 CaptureThread::CaptureThread(int cam_id)
 {
@@ -38,10 +39,12 @@ CaptureThread::CaptureThread(int cam_id)
   captureModule->addFlags(VARTYPE_FLAG_NOLOAD_ENUM_CHILDREN);
   captureModule->addItem("DC 1394");
   captureModule->addItem("Video4Linux 2");
+  captureModule->addItem("ROS Topic");
   captureModule->addItem("Read from files");
   captureModule->addItem("Generator");
   settings->addChild( (VarType*) (dc1394 = new VarList("DC1394")));
   settings->addChild( (VarType*) (v4l2 = new VarList("Video4Linux 2")));
+  settings->addChild( (VarType*) (rostopic = new VarList("ROS Topic")));
   settings->addChild( (VarType*) (fromfile = new VarList("Read from files")));
   settings->addChild( (VarType*) (generator = new VarList("Generator")));
   settings->addFlags( VARTYPE_FLAG_AUTO_EXPAND_TREE );
@@ -57,6 +60,7 @@ CaptureThread::CaptureThread(int cam_id)
   capture=0;
   captureDC1394 = new CaptureDC1394v2(dc1394,camId);
   captureV4L2 = new CaptureV4L2(v4l2);
+  captureRosTopic  = new CaptureRosTopic(rostopic);
   captureFiles = new CaptureFromFile(fromfile);
   captureGenerator = new CaptureGenerator(generator);
   selectCaptureMethod();
@@ -82,6 +86,7 @@ CaptureThread::~CaptureThread()
 {
   delete captureDC1394;
   delete captureV4L2;
+  delete captureRosTopic;
   delete captureFiles;
   delete captureGenerator;
   delete counter;
@@ -109,6 +114,9 @@ void CaptureThread::selectCaptureMethod() {
     new_capture = captureGenerator;
   } else if(captureModule->getString() == "Video4Linux 2") {
     new_capture = captureV4L2;
+  }
+  else if (captureModule->getString() == "ROS Topic") {
+    new_capture = captureRosTopic;
   } else {
     new_capture = captureDC1394;
   }
